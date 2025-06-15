@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import CustomUserCreationForm
 
-# Create your views here.
+# Create your viewsets here.
 def signup_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)

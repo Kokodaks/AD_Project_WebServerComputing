@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}스핀오프 등록{% endblock %}
+
+{% block content %}
+<h2>{% if mode == 'create' %} 스핀오프 등록 {% else %} 스핀오프 수정 {% endif %}</h2>
+
+<form method="post" enctype="multipart/form-data" onsubmit="return handleFormSubmit();">
+  {% csrf_token %}
+
+  {{ form.image.label_tag }}<br>
+  {{ form.image }}<br><br>
+
+  {{ form.description.label_tag }}<br>
+  {{ form.description }}<br><br>
+
+  <!-- 동적으로 재료 입력 -->
+  <label for="ingredients-container">재료:</label>
+  <div id="ingredients-container">
+    <div class="ingredient-group mb-2">
+      <input type="text" class="form-control d-inline w-50" placeholder="재료 이름">
+      <input type="text" class="form-control d-inline w-25" placeholder="양">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredient(this)">삭제</button>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn-outline-secondary mb-3" onclick="addIngredient()">재료 추가</button>
+
+  <!-- 숨겨진 contents 필드 -->
+  {{ form.contents }}
+
+  <button type="submit" class="btn btn-primary">
+    {% if mode == 'create' %} 스핀오프 등록 {% else %} 수정 {% endif %}
+  </button>
+</form>
+
+<a href="{% url 'recipe_app:recipe_detail' recipe.id %}" class="btn btn-secondary mt-2">돌아가기</a>
+
+<script>
+  function addIngredient() {
+    const container = document.getElementById('ingredients-container');
+    const div = document.createElement('div');
+    div.className = 'ingredient-group mb-2';
+    div.innerHTML = `
+      <input type="text" class="form-control d-inline w-50" placeholder="재료 이름">
+      <input type="text" class="form-control d-inline w-25" placeholder="양">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredient(this)">삭제</button>
+    `;
+    container.appendChild(div);
+  }
+
+  function removeIngredient(btn) {
+    btn.parentElement.remove();
+  }
+
+function handleFormSubmit() {
+  const form = document.getElementById("recipe-form");
+  const formData = new FormData(form);
+
+  const ingredients = [];
+  const groups = document.querySelectorAll('.ingredient-group');
+  groups.forEach(group => {
+    const inputs = group.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    const amount = inputs[1].value.trim();
+    if (name && amount) {
+      ingredients.push({ name, amount });
+    }
+  });
+
+  formData.set("contents", JSON.stringify(ingredients));
+
+  const method = "{{ mode }}" === "update" ? "PUT" : "POST";
+  const url = "{{ mode }}" === "update" ? `/api/recipes/{{ recipe.id }}/` : `/api/recipes/`;
+
+  fetch(url, {
+    method: method,
+    headers: {
+      "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+    },
+    body: formData
+  }).then(res => {
+    if(res.ok) {
+      alert("레시피 생성!");
+      window.location.href = "/";
+    } else {
+      alert("레시피 생성 오류!");
+    }
+  });
+
+  return false;
+}
+
+</script>
+{% endblock %}

@@ -1,7 +1,21 @@
 {% extends "base.html" %}
+{% block content %}
 <h2>회원가입</h2>
 <form method="post">
- {% csrf_token %}
- {{ form.as_p }}
+  {% csrf_token %}
+  {% include "form-errors.html" %}
+  {{ form.username.label_tag }}<br>
+  {{ form.username }}<br><br>
+
+  {{ form.email.label_tag }}<br>
+  {{ form.email }}<br><br>
+
+  {{ form.password1.label_tag }}<br>
+  {{ form.password1 }}<br><br>
+
+  {{ form.password2.label_tag }}<br>
+  {{ form.password2 }}<br><br>
+
  <button type="submit">가입하기</button>
 </form>
+{% endblock %}

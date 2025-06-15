@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}레시피 등록{% endblock %}
+
+{% block content %}
+<h2>{% if mode == 'create' %}레시피 등록 {% else %} 레시피 수정 {% endif %}</h2>
+
+<form id="recipe-form" method="post" enctype="multipart/form-data" onsubmit="return handleFormSubmit();">
+  {% csrf_token %}
+
+  {{ form.image.label_tag }}<br>
+  {{ form.image }}<br><br>
+
+  {{ form.title.label_tag }}<br>
+  {{ form.title }}<br><br>
+
+  {{ form.category.label_tag }}
+  {{ form.category }}<br><br>
+
+  {{ form.description.label_tag }}<br>
+  {{ form.description }}<br><br>
+
+  <!-- 동적으로 재료 입력 -->
+  <label for="ingredients-container">재료:</label>
+  <div id="ingredients-container">
+    <div class="ingredient-group mb-2">
+      <input type="text" name="ingredient_name" class="form-control d-inline w-50" placeholder="재료 이름">
+      <input type="text" name="ingredient_amount" class="form-control d-inline w-25" placeholder="양">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredient(this)">삭제</button>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn-outline-secondary mb-3" onclick="addIngredient()">재료 추가</button>
+
+  <!-- 숨겨진 contents 필드 -->
+  {{ form.contents }}
+
+  <button type="submit" class="btn btn-primary">
+    {% if mode == 'create' %} 등록 {% else %} 수정 {% endif %}
+  </button>
+</form>
+
+<a href="{% url 'recipe_app:home'%}" class="btn btn-secondary mt-2">돌아가기</a>
+
+<script>
+  function addIngredient() {
+    const container = document.getElementById('ingredients-container');
+    const div = document.createElement('div');
+    div.className = 'ingredient-group mb-2';
+    div.innerHTML = `
+      <input type="text" name="ingredient_name" class="form-control d-inline w-50" placeholder="재료 이름">
+      <input type="text" name="ingredient_amount" class="form-control d-inline w-25" placeholder="양">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredient(this)">삭제</button>
+    `;
+    container.appendChild(div);
+  }
+
+  function removeIngredient(btn) {
+    btn.parentElement.remove();
+  }
+
+  function handleFormSubmit() {
+    const ingredients = [];
+    const groups = document.querySelectorAll('.ingredient-group');
+    groups.forEach(group => {
+      const name = group.querySelector('input[name="ingredient_name"]').value.trim();
+      const amount = group.querySelector('input[name="ingredient_amount"]').value.trim();
+      if (name && amount) {
+        ingredients.push({ name, amount });
+      }
+    });
+
+    document.getElementById("id_contents").value = JSON.stringify(ingredients);
+
+    return true;
+  }
+</script>
+
+
+{% endblock %}

@@ -1,8 +1,18 @@
 from rest_framework import serializers
+from .models import Recipe, Spinoff
 
-#Recipe
-class RecipeSpinoffFormSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    description = serializers.CharField()
-    contents = serializers.JSONField()
+class RecipeSerializer(serializers.ModelSerializer):
+    contents = serializers.ListField(
+        child=serializers.DictField(),
+        allow_empty=False
+    )
+
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+
+class SpinoffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Spinoff
+        fields = '__all__'
 

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+<p>편식쟁이 - {{ recipe.title }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+
+    {% if request.user == recipe.user %}
+    <div class="text-end mt-3">
+      <a href="{% url 'recipe_app:recipe_update' recipe.id %}" class="btn btn-primary">
+        레시피 수정하기
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- 왼쪽: 이미지 -->
+    <div class="col-md-6">
+      {% if recipe.image %}
+        <img src="{{ recipe.image.url }}" class="img-fluid rounded" alt="{{ recipe.title }}">
+      {% else %}
+        <img src="{% static 'default.jpg' %}" class="img-fluid rounded" alt="기본 이미지">
+      {% endif %}
+    </div>
+
+    <!-- 오른쪽: 정보 -->
+    <div class="col-md-6 d-flex flex-column justify-content-between">
+      <div>
+        <h2>{{ recipe.title }}</h2>
+        <p class="text-muted">작성자: {{ recipe.user.username }} | 카테고리: {{ recipe.get_category_display }}</p>
+        <p><strong>설명:</strong></p>
+        <p>{{ recipe.description }}</p>
+
+        <p><strong>재료:</strong></p>
+        <ul>
+          {% for item in recipe.contents %}
+            <li>{{ item.name }} - {{ item.amount }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스핀오프 영역 -->
+  <div class="mt-5">
+    <h4>관련 스핀오프 레시피</h4>
+    {% if spinoff %}
+      <div class="row">
+        {% for s in spinoff %}
+          <div class="col-md-4 mb-4">
+            <div class="card h-100">
+              {% if s.image %}
+                <img src="{{ s.image.url }}" class="card-img-top" alt="스핀오프 이미지">
+              {% endif %}
+              <a href="{% url 'recipe_app:spinoff_detail' s.id %}" class="text-decoration-none text-dark">
+                <div class="card-body">
+                  <p class="card-text">{{ s.description|truncatechars:100 }}</p>
+                </div>
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted">아직 등록된 스핀오프 레시피가 없습니다.</p>
+    {% endif %}
+  </div>
+
+  <!-- 스핀오프 등록 버튼 -->
+  {% if request.user != recipe.user %}
+  <div class="text-end mt-3">
+    <a href="{% url 'recipe_app:spinoff_create' recipe.id %}" class="btn btn-primary">
+      스핀오프 레시피 등록
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
