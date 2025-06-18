@@ -19,6 +19,7 @@
 {% if request.user.is_authenticated %}
   <div class="mb-3 text-end">
     <a href="{% url 'recipe_app:recipe_create' %}" class="btn btn-success">레시피 등록</a>
+    <a href="{% url 'recipe_app:my_page' %}" class="btn btn-success">마이 페이지</a>
   </div>
 {% endif %}
 

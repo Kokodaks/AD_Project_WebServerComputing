@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}내가 좋아요한 레시피들{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">❤️ 내가 좋아요한 콘텐츠</h2>
+
+  <!-- 좋아요한 레시피 -->
+  <h4 class="mt-4">🍳 레시피</h4>
+  {% if liked_recipes %}
+    <div class="row">
+      {% for recipe in liked_recipes %}
+        <div class="col-md-4 mb-3">
+          <div class="card h-100">
+            {% if recipe.image %}
+              <img src="{{ recipe.image.url }}" class="card-img-top" alt="레시피 이미지">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ recipe.title }}</h5>
+              <p class="card-text">{{ recipe.description|truncatechars:100 }}</p>
+              <a href="{% url 'recipe_app:recipe_detail' recipe.id %}" class="btn btn-primary">보러가기</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>좋아요한 레시피가 없습니다.</p>
+  {% endif %}
+
+  <!-- 좋아요한 스핀오프 -->
+  <h4 class="mt-5">🌀 스핀오프</h4>
+  {% if liked_spinoffs %}
+    <div class="row">
+      {% for spinoff in liked_spinoffs %}
+        <div class="col-md-4 mb-3">
+          <div class="card h-100">
+            {% if spinoff.image %}
+              <img src="{{ spinoff.image.url }}" class="card-img-top" alt="스핀오프 이미지">
+            {% endif %}
+            <div class="card-body">
+              <p class="card-text">{{ spinoff.description|truncatechars:100 }}</p>
+              <a href="{% url 'recipe_app:spinoff_detail' spinoff.id %}" class="btn btn-secondary">보러가기</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>좋아요한 스핀오프가 없습니다.</p>
+  {% endif %}
+</div>
+<div class="container mt-5">
+  <h2 class="mb-4">👩‍🍳 내가 만든 콘텐츠</h2>
+
+  <!-- 내가 만든 레시피 -->
+  <h4 class="mt-4">🍳 레시피</h4>
+  {% if my_recipes %}
+    <div class="row">
+      {% for recipe in my_recipes %}
+        <div class="col-md-4 mb-3">
+          <div class="card h-100">
+            {% if recipe.image %}
+              <img src="{{ recipe.image.url }}" class="card-img-top" alt="내 레시피 이미지">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ recipe.title }}</h5>
+              <p class="card-text">{{ recipe.description|truncatechars:100 }}</p>
+              <a href="{% url 'recipe_app:recipe_detail' recipe.id %}" class="btn btn-success">보러가기</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>내가 등록한 레시피가 없습니다.</p>
+  {% endif %}
+
+  <!-- 내가 만든 스핀오프 -->
+  <h4 class="mt-5">🌀 스핀오프</h4>
+  {% if my_spinoffs %}
+    <div class="row">
+      {% for spinoff in my_spinoffs %}
+        <div class="col-md-4 mb-3">
+          <div class="card h-100">
+            {% if spinoff.image %}
+              <img src="{{ spinoff.image.url }}" class="card-img-top" alt="내 스핀오프 이미지">
+            {% endif %}
+            <div class="card-body">
+              <p class="card-text">{{ spinoff.description|truncatechars:100 }}</p>
+              <a href="{% url 'recipe_app:spinoff_detail' spinoff.id %}" class="btn btn-success">보러가기</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>내가 등록한 스핀오프가 없습니다.</p>
+  {% endif %}
+</div>
+{% endblock %}

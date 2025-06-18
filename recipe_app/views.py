@@ -1,20 +1,22 @@
 from django.http import (
-    HttpResponse, HttpResponseBadRequest,
-    HttpResponseNotFound, HttpResponseServerError,
+    HttpResponseBadRequest,
+    HttpResponseNotFound, HttpResponseServerError, HttpResponseForbidden,
+    JsonResponse
 )
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from .forms import RecipeForm, SpinoffRecipeForm
-from .models import Recipe, Spinoff
+from .models import Recipe, Spinoff, Like
 from .services.recipe_services import RecipeService
 
 def home_view(request):
     try:
         category = request.GET.get('category', 'food')
-        recipes = Recipe.get_recipes_by_category(category)
+        recipes = RecipeService.recipes_by_category(category)
         paginator = Paginator(recipes, 6)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -32,10 +34,8 @@ def recipe_create(request):
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                recipe = form.save(commit=False)
-                recipe.user = request.user
-                RecipeService.create_recipe(recipe)
-                return redirect('recipe_app:home')  # 302 Redirect
+                recipe = RecipeService.create_recipe(form, request.user)
+                return redirect('recipe_app:recipe_detail', pk=recipe.pk)  # 302 Redirect
             except ValidationError as e:
                 return HttpResponseBadRequest(f"유효성 오류: {e}")
         return HttpResponseBadRequest("폼 유효성 검사 실패")
@@ -71,6 +71,14 @@ def recipe_update(request, pk):
             'recipe': recipe
         })
 
+@login_required
+def recipe_delete(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk)
+    if recipe.user != request.user:
+        return HttpResponseForbidden("삭제 권한이 없습니다.")
+
+    recipe.delete()
+    return redirect("recipe_app:home")
 
 @login_required
 def spinoff_create(request, pk):
@@ -83,10 +91,7 @@ def spinoff_create(request, pk):
         form = SpinoffRecipeForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                spinoff = form.save(commit=False)
-                spinoff.recipe = recipe
-                spinoff.user = request.user
-                RecipeService.create_spinoff(spinoff)
+                spinoff = RecipeService.create_spinoff(form, recipe, request.user)
                 return redirect('recipe_app:spinoff_detail', pk=spinoff.pk)
             except ValidationError as e:
                 return HttpResponseBadRequest(f"스핀오프 생성 실패: {e}")
@@ -124,11 +129,21 @@ def spinoff_update(request, pk):
             'recipe': spinoff.recipe
         })
 
+@login_required
+def spinoff_delete(request, pk):
+    spinoff = get_object_or_404(Spinoff, pk=pk)
+    recipe = spinoff.recipe
+
+    if spinoff.user != request.user:
+        return HttpResponseForbidden("삭제 권한이 없습니다.")
+
+    spinoff.delete()
+    return redirect("recipe_app:recipe_detail", pk=recipe.pk)
 
 def recipe_detail(request, pk):
     try:
         recipe = get_object_or_404(Recipe, pk=pk)
-        spinoff = Spinoff.get_spinoff_by_recipe(recipe)
+        spinoff = RecipeService.get_recipe_spinoff(recipe)
         return render(request, 'recipe_app/recipe_detail.html', {
             'recipe': recipe,
             'spinoff': spinoff,
@@ -149,3 +164,38 @@ def spinoff_detail(request, pk):
         return HttpResponseNotFound("스핀오프를 찾을 수 없습니다.")
     except Exception as e:
         return HttpResponseServerError(f"서버 오류: {e}")
+
+@login_required
+def toggle_recipe_like(request, pk):
+    try:
+        result = RecipeService.toggle_recipe_like(request.user, pk)
+        return JsonResponse({'liked': result})
+    except ObjectDoesNotExist:
+        return JsonResponse({'error': '해당 레시피가 존재하지 않습니다.'}, status=404)
+    except Exception as e:
+        return HttpResponseServerError(f"서버 오류: {str(e)}")
+
+
+@login_required
+def toggle_spinoff_like(request, pk):
+    try:
+        result = RecipeService.toggle_spinoff_like(request.user, pk)
+        return JsonResponse({'liked': result})
+    except ObjectDoesNotExist:
+        return JsonResponse({'error': '해당 스핀오프가 존재하지 않습니다.'}, status=404)
+    except Exception as e:
+        return HttpResponseServerError(f"서버 오류: {str(e)}")
+
+@login_required
+def my_page(request):
+    liked_recipes = RecipeService.get_liked_recipes(request.user)
+    liked_spinoffs = RecipeService.get_liked_spinoffs(request.user)
+    my_recipes = RecipeService.my_recipes(request.user)
+    my_spinoffs = RecipeService.my_spinoffs(request.user)
+
+    return render(request, 'recipe_app/my_page.html', {
+        'liked_recipes': liked_recipes,
+        'liked_spinoffs': liked_spinoffs,
+        'my_recipes': my_recipes,
+        'my_spinoffs': my_spinoffs,
+    })

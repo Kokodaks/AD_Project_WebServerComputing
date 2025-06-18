@@ -32,8 +32,7 @@
   <button type="button" class="btn btn-outline-secondary mb-3" onclick="addIngredient()">재료 추가</button>
 
   <!-- 숨겨진 contents 필드 -->
-  {{ form.contents }}
-
+  <input type="hidden" name="contents" id="id_contents">
   <button type="submit" class="btn btn-primary">
     {% if mode == 'create' %} 등록 {% else %} 수정 {% endif %}
   </button>

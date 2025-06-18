@@ -29,9 +29,12 @@ class Recipe(models.Model):
         return self.title
 
     @classmethod
-    def get_recipes_by_category(cls, category) -> models.QuerySet('Recipe'):
+    def get_recipes_by_category(cls, category) -> models.QuerySet['Recipe']:
         return cls.objects.filter(category=category).order_by('-created_at')
 
+    @classmethod
+    def liked_by_user(cls, user):
+        return cls.objects.filter(like__user=user).distinct()
 
 class Spinoff(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -45,8 +48,19 @@ class Spinoff(models.Model):
         return self.recipe.title
 
     @classmethod
-    def get_spinoff_by_recipe(cls, recipe) -> models.QuerySet('Spinoff'):
+    def get_spinoff_by_recipe(cls, recipe) -> models.QuerySet['Spinoff']:
         return cls.objects.filter(recipe=recipe).order_by('-created_at')
 
+    @classmethod
+    def liked_by_user(cls, user):
+        return cls.objects.filter(like__user=user).distinct()
 
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.ForeignKey('Recipe', null=True, blank=True, on_delete=models.CASCADE)
+    spinoff = models.ForeignKey('Spinoff', null=True, blank=True, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'recipe'), ('user', 'spinoff')]
 

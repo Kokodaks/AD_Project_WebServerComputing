@@ -1,5 +1,6 @@
 from rest_framework.exceptions import ValidationError
-from ..models import Recipe, Spinoff
+from django.shortcuts import get_object_or_404
+from ..models import Recipe, Spinoff, Like
 import json
 
 class RecipeService:
@@ -18,27 +19,21 @@ class RecipeService:
         return Recipe.get_recipes_by_category(category)
 
     @staticmethod
-    def create_recipe(recipe):
-        parsed_contents = RecipeService._parse_contents(recipe.contents)
-        return Recipe.objects.create(
-            user=recipe.user,
-            title=recipe.title,
-            contents=parsed_contents,
-            description=recipe.description,
-            category=recipe.category,
-            image=recipe.image
-        )
+    def create_recipe(form, user):
+        recipe = form.save(commit=False)
+        recipe.user = user
+        recipe.contents = RecipeService._parse_contents(recipe.contents)
+        recipe.save()
+        return recipe
 
     @staticmethod
-    def create_spinoff(spinoff):
-        parsed_contents = RecipeService._parse_contents(spinoff.contents)
-        return Spinoff.objects.create(
-            user=spinoff.user,
-            recipe=spinoff.recipe,
-            contents=parsed_contents,
-            description=spinoff.description,
-            image=spinoff.image
-        )
+    def create_spinoff(form, recipe, user):
+        spinoff = form.save(commit=False)
+        spinoff.recipe = recipe
+        spinoff.user = user
+        spinoff.contents = RecipeService._parse_contents(spinoff.contents)
+        spinoff.save()
+        return spinoff
 
     @staticmethod
     def update_recipe(recipe, data):
@@ -67,3 +62,44 @@ class RecipeService:
 
         spinoff.save()
         return spinoff
+
+    @staticmethod
+    def get_recipe_spinoff(recipe):
+        return Spinoff.get_spinoff_by_recipe(recipe)
+
+    @staticmethod
+    def get_liked_recipes(user):
+        return Recipe.liked_by_user(user)
+
+    @staticmethod
+    def get_liked_spinoffs(user):
+        return Spinoff.liked_by_user(user)
+
+    @staticmethod
+    def toggle_recipe_like(user, recipe_id):
+        recipe = get_object_or_404(Recipe, pk=recipe_id)
+        like, created = Like.objects.get_or_create(user=user, recipe=recipe)
+        if not created:
+            like.delete()
+            return False  # 좋아요 취소
+        return True  # 좋아요 추가
+
+    @staticmethod
+    def toggle_spinoff_like(user, spinoff_id):
+        spinoff = get_object_or_404(Spinoff, pk=spinoff_id)
+        like, created = Like.objects.get_or_create(user=user, spinoff=spinoff)
+        if not created:
+            like.delete()
+            return False
+        return True
+
+    @staticmethod
+    def my_recipes(user):
+        recipes = Recipe.objects.filter(user=user)
+        return recipes
+
+    @staticmethod
+    def my_spinoffs(user):
+        spinoffs = Spinoff.objects.filter(user=user)
+        return spinoffs
+

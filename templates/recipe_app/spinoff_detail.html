@@ -12,7 +12,10 @@
     {% if request.user == spinoff.user %}
     <div class="text-end mt-3">
       <a href="{% url 'recipe_app:spinoff_update' spinoff.id %}" class="btn btn-primary">
-        레시피 수정하기
+        스핀오프 수정하기
+      </a>
+      <a href="{% url 'recipe_app:spinoff_delete' spinoff.id %}" class="btn btn-primary">
+        스핀오프 삭제하기
       </a>
     </div>
     {% endif %}
@@ -42,6 +45,22 @@
         </ul>
       </div>
     </div>
+    <button onclick="toggleLike({{ spinoff.id }})">좋아요</button>
+    <span id="like-status"></span>
   </div>
 </div>
+<script>
+  function toggleLike(id) {
+    fetch(`/like/spinoff/${id}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('like-status').innerText = data.liked ? '❤️' : '🤍';
+    });
+  }
+</script>
 {% endblock %}

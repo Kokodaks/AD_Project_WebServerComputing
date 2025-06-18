@@ -14,6 +14,9 @@
       <a href="{% url 'recipe_app:recipe_update' recipe.id %}" class="btn btn-primary">
         레시피 수정하기
       </a>
+      <a href="{% url 'recipe_app:recipe_delete' recipe.id %}" class="btn btn-primary">
+        레시피 삭제하기
+      </a>
     </div>
     {% endif %}
 
@@ -42,18 +45,20 @@
         </ul>
       </div>
     </div>
+    <button onclick="toggleLike({{ recipe.id }})">좋아요</button>
+    <span id="like-status"></span>
   </div>
 
   <!-- 스핀오프 영역 -->
   <div class="mt-5">
     <h4>관련 스핀오프 레시피</h4>
     {% if spinoff %}
-      <div class="row">
+    <div class="row">
         {% for s in spinoff %}
-          <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card h-100">
               {% if s.image %}
-                <img src="{{ s.image.url }}" class="card-img-top" alt="스핀오프 이미지">
+              <img src="{{ s.image.url }}" class="card-img-top" alt="스핀오프 이미지">
               {% endif %}
               <a href="{% url 'recipe_app:spinoff_detail' s.id %}" class="text-decoration-none text-dark">
                 <div class="card-body">
@@ -65,9 +70,10 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="text-muted">아직 등록된 스핀오프 레시피가 없습니다.</p>
+    <p class="text-muted">아직 등록된 스핀오프 레시피가 없습니다.</p>
     {% endif %}
   </div>
+
 
   <!-- 스핀오프 등록 버튼 -->
   {% if request.user != recipe.user %}
@@ -78,4 +84,20 @@
   </div>
   {% endif %}
 </div>
+
+<script>
+  function toggleLike(id) {
+    fetch(`/like/recipe/${id}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('like-status').innerText = data.liked ? '❤️' : '🤍';
+    });
+  }
+</script>
+
 {% endblock %}

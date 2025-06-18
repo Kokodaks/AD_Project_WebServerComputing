@@ -1,16 +1,9 @@
-from rest_framework.routers import DefaultRouter
-from django.urls import path, include
+from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .viewsets.APIViewSets import RecipeViewSet, SpinoffViewSet
 from . import views
 
 app_name='recipe_app'
-
-router = DefaultRouter()
-router.register('recipes', RecipeViewSet)
-router.register('spinoffs', SpinoffViewSet)
-
 
 urlpatterns=[
     #HTML 렌더링
@@ -21,5 +14,9 @@ urlpatterns=[
     path('recipe/create', views.recipe_create, name='recipe_create'),
     path('recipe/update/<int:pk>', views.recipe_update, name='recipe_update'),
     path('recipe/spinoff/update/<int:pk>', views.spinoff_update, name='spinoff_update'),
-    path('api/', include(router.urls))
+    path('recipe/<int:pk>/delete', views.recipe_delete, name='recipe_delete'),
+    path('spinoff/<int:pk>/delete', views.spinoff_delete, name='spinoff_delete'),
+    path('like/recipe/<int:pk>/', views.toggle_recipe_like, name='toggle_recipe_like'),
+    path('like/spinoff/<int:pk>/', views.toggle_spinoff_like, name='toggle_spinoff_like'),
+    path('my-page/', views.my_page, name='my_page'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
